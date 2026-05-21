@@ -903,6 +903,7 @@
     width: 100%;
     height: 360px;
     cursor: none;
+    touch-action: none;
     background: repeating-linear-gradient(
       transparent, transparent 31px,
       rgba(74,52,40,0.06) 31px, rgba(74,52,40,0.06) 32px
@@ -1808,6 +1809,54 @@ canvas.addEventListener('mouseleave', () => {
   if (hasDrawn) idleTimer = setTimeout(() => { setMood('idle'); }, 3000);
 });
 
+function getTouchPos(canvas, touch) {
+  const rect = canvas.getBoundingClientRect();
+
+  return {
+    x: touch.clientX - rect.left,
+    y: touch.clientY - rect.top
+  };
+}
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+
+  drawing = true;
+
+  const pos = getTouchPos(canvas, e.touches[0]);
+
+  lastX = pos.x;
+  lastY = pos.y;
+
+  setMood('watching');
+  clearTimeout(idleTimer);
+});
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+
+  if (!drawing) return;
+
+  const pos = getTouchPos(canvas, e.touches[0]);
+
+  ctx.beginPath();
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(pos.x, pos.y);
+  ctx.stroke();
+
+  lastX = pos.x;
+  lastY = pos.y;
+  hasDrawn = true;
+});
+
+canvas.addEventListener('touchend', () => {
+  drawing = false;
+  setMood('happy');
+
+  idleTimer = setTimeout(() => {
+    setMood('idle');
+  }, 2500);
+});
 // ── CANVAS CAT MOODS ──
 const moodEl = document.getElementById('cat-mood');
 const ccEyeL = document.getElementById('cc-eye-l');
